@@ -1,0 +1,147 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String           @id @default(uuid())
+  email           String           @unique
+  nome            String
+  senha           String
+  cpf             String?          @unique
+  nacionalidade   String?
+  documentoTipo   String?
+  documentoNumero String?
+  ddi             String?
+  telefone        String?
+  dataNascimento  DateTime?
+  avatarUrl       String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  balance         Balance?
+  deposits        Deposit[]
+  withdrawals     Withdrawal[]
+  operations      TradeOperation[]
+  logs            UserLog[]
+  auditLogs       AuditLog[]
+}
+
+model Balance {
+  id         String   @id @default(uuid())
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String   @unique
+  saldoDemo  Float  @default(0.0)
+  saldoReal  Float  @default(0.0)
+  updatedAt  DateTime @updatedAt
+}
+
+model Deposit {
+  id            String   @id @default(uuid())
+  transactionId String   @default(uuid())  // Alterado para usar uuid() em vez de um valor fixo
+  user          User     @relation(fields: [userId], references: [id])
+  userId        String
+  tipo          String
+  valor         Float
+  status        DepositStatus
+  dataCriacao   DateTime @default(now())
+  dataPagamento DateTime?
+}
+
+
+enum DepositStatus {
+  concluido
+  pendente
+  cancelado
+}
+
+model Config {
+  id                    Int     @id @default(autoincrement())
+  nomeSite              String?
+  logoUrl               String?
+  taxa                  Float?
+  valorMinimoSaque      Float?
+  valorMinimoDeposito   Float?
+  endPointGateway       String?
+  tokenPublicoGateway   String?
+  tokenPrivadoGateway   String?
+  criadoEm              DateTime @default(now())
+}
+
+
+model Withdrawal {
+  id            String   @id @default(uuid())
+  user          User     @relation(fields: [userId], references: [id])
+  userId        String
+  dataPedido    DateTime @default(now())
+  dataPagamento DateTime?
+  tipoChave     String
+  chave         String
+  status        WithdrawalStatus
+  valor         Float
+  taxa          Float
+}
+
+enum WithdrawalStatus {
+  concluido
+  pendente
+  cancelado
+}
+
+model TradeOperation {
+  id         String   @id @default(uuid())
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String
+  data       DateTime
+  ativo      String
+  tempo      String
+  previsao   String
+  vela       String
+  abertura   Float
+  fechamento Float?
+  valor      Float
+  estornado  Boolean  @default(false)
+  executado  Boolean  @default(false)
+  status     String
+  receita    Float    @default(0)
+  resultado  Resultado?
+}
+
+enum Resultado {
+  ganho
+  perda
+  pendente
+}
+
+model UserLog {
+  id         String   @id @default(uuid())
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String
+  acao       String
+  descricao  String
+  ip         String
+  userAgent  String
+  createdAt  DateTime @default(now())
+}
+
+model AuditLog {
+  id             String   @id @default(uuid())
+  user           User?    @relation(fields: [userId], references: [id])
+  userId         String?
+  entidade       String
+  entidadeId     String
+  acao           AcaoAuditoria
+  valoresAntigos Json?
+  valoresNovos   Json?
+  createdAt      DateTime @default(now())
+}
+
+enum AcaoAuditoria {
+  create
+  update
+  delete
+}

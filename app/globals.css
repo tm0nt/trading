@@ -1,0 +1,456 @@
+/* Substituir as variáveis CSS e as sobreposições para uma abordagem mais direta */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 255, 255, 255;
+  --background-rgb: 18, 18, 18;
+}
+
+.light {
+  --foreground-rgb: 0, 0, 0;
+  --background-rgb: 255, 255, 255;
+
+  /* Light mode overrides */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #f0f2f5;
+  --border-color: #e0e0e0;
+  --text-muted: #666666;
+  --text-primary: #000000;
+  --card-bg: #ffffff;
+  --dropdown-bg: #f8f9fa;
+  --hover-bg: #e9ecef;
+  --progress-bg: #dddddd;
+}
+
+.dark {
+  --foreground-rgb: 255, 255, 255;
+  --background-rgb: 18, 18, 18;
+
+  /* Dark mode overrides */
+  --bg-primary: #000508;
+  --bg-secondary: #121212;
+  --bg-tertiary: #1a1a1a;
+  --border-color: #2a2a2a;
+  --text-muted: #999999;
+  --text-primary: #ffffff;
+  --card-bg: #1a1a1a;
+  --dropdown-bg: #151515;
+  --hover-bg: #222222;
+  --progress-bg: #333333;
+}
+
+body {
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+/* Aplicar variáveis CSS aos elementos comuns */
+.bg-\[\#121212\] {
+  background-color: var(--bg-secondary);
+}
+
+.bg-\[\#1a1a1a\] {
+  background-color: var(--bg-tertiary);
+}
+
+.bg-\[\#0a0a0a\] {
+  background-color: var(--bg-primary);
+}
+
+.border-\[\#2a2a2a\] {
+  border-color: var(--border-color);
+}
+
+.text-\[\#999\] {
+  color: var(--text-muted);
+}
+
+.text-white {
+  color: var(--text-primary);
+}
+
+.bg-\[\#1e2c38\] {
+  background-color: var(--bg-tertiary);
+}
+
+.bg-\[\#151515\] {
+  background-color: var(--dropdown-bg);
+}
+
+.hover\:bg-\[\#1a1a1a\]:hover {
+  background-color: var(--hover-bg);
+}
+
+.hover\:bg-\[\#222\]:hover {
+  background-color: var(--hover-bg);
+}
+
+/* Corrigir a cor de fundo da barra de progresso */
+.bg-\[\#333\] {
+  background-color: var(--progress-bg) !important;
+}
+
+/* Gradientes */
+.from-\[\#151515\] {
+  --tw-gradient-from: var(--dropdown-bg);
+}
+
+.to-\[\#121212\] {
+  --tw-gradient-to: var(--bg-secondary);
+}
+
+.to-\[\#0c0c0c\] {
+  --tw-gradient-to: var(--bg-tertiary);
+}
+
+.from-\[\#121212\] {
+  --tw-gradient-from: var(--bg-secondary);
+}
+
+.to-\[\#0a0a0a\] {
+  --tw-gradient-to: var(--bg-primary);
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .shadow-glow {
+    box-shadow: 0 0 8px 2px rgba(255, 255, 255, 0.2);
+  }
+}
+
+@media (max-width: 768px) {
+  .mobile-trading-view {
+    height: calc(100vh - 60px - 320px);
+  }
+}
+
+/* Scrollbar personalizada */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 10px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Para Firefox */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) transparent;
+}
+
+/* Animações para o modal */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out forwards;
+}
+
+/* Theme transition */
+.theme-transition {
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease;
+}
+
+/* CORREÇÕES ESPECÍFICAS PARA O MODO CLARO */
+
+/* Garantir que os botões COMPRA/VENDA tenham texto branco em ambos os modos */
+.bg-\[rgb\(8\,134\,90\)\],
+.bg-\[rgb\(204\,2\,77\)\],
+.hover\:bg-\[rgb\(7\,115\,77\)\]:hover,
+.hover\:bg-\[rgb\(180\,2\,70\)\]:hover,
+.buy-button,
+.sell-button {
+  color: white !important;
+}
+
+/* Garantir que o texto dentro dos botões COMPRA/VENDA seja branco */
+.bg-\[rgb\(8\,134\,90\)\] span,
+.bg-\[rgb\(204\,2\,77\)\] span,
+.hover\:bg-\[rgb\(7\,115\,77\)\]:hover span,
+.hover\:bg-\[rgb\(180\,2\,70\)\]:hover span,
+button:has(span:contains("COMPRA")) span,
+button:has(span:contains("VENDA")) span,
+.buy-button span,
+.sell-button span {
+  color: white !important;
+}
+
+/* Garantir que os textos COMPRA e VENDA sejam SEMPRE brancos */
+.buy-button span,
+.sell-button span,
+button.bg-\[rgb\(8\,134\,90\)\] span,
+button.bg-\[rgb\(204\,2\,77\)\] span,
+button:has(span:contains("COMPRA")) span,
+button:has(span:contains("VENDA")) span,
+.light .buy-button span,
+.light .sell-button span,
+.light button.bg-\[rgb\(8\,134\,90\)\] span,
+.light button.bg-\[rgb\(204\,2\,77\)\] span {
+  color: white !important;
+}
+
+.light button[class*="bg-[rgb(8,134,90)"] span,
+.light button[class*="bg-[rgb(204,2,77)"] span,
+.light button.buy-button span,
+.light button.sell-button span {
+  color: white !important;
+}
+
+html.light button.buy-button span,
+html.light button.sell-button span,
+html.light button[class*="bg-[rgb(8,134,90)"] span,
+html.light button[class*="bg-[rgb(204,2,77)"] span {
+  color: white !important;
+}
+
+.bg-\[rgb\(8\,134\,90\)\] svg,
+.bg-\[rgb\(204\,2\,77\)\] svg,
+.hover\:bg-\[rgb\(7\,115\,77\)\]:hover svg,
+.hover\:bg-\[rgb\(180\,2\,70\)\]:hover svg,
+button:has(span:contains("COMPRA")) svg,
+button:has(span:contains("VENDA")) svg,
+.buy-button svg,
+.sell-button svg {
+  color: white !important;
+}
+
+.bg-\[rgb\(8\,134\,90\)\] .text-white,
+header a.bg-\[rgb\(8\,134\,90\)\] svg,
+.bg-\[rgb\(8\,134\,90\)\].p-1\.5 svg,
+a.bg-\[rgb\(8\,134\,90\)\] svg,
+button.bg-\[rgb\(8\,134\,90\)\] svg,
+.wallet-button svg {
+  color: white !important;
+}
+
+.light .hover\:bg-\[\#1a2530\]:hover {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+.light button.hover\:bg-\[\#222\]:hover,
+.light a.hover\:bg-\[\#222\]:hover,
+.light .hover\:bg-\[\#1a1a1a\]:hover {
+  background-color: rgba(0, 0, 0, 0.08) !important;
+  transition: background-color 0.2s ease;
+}
+
+.light .profile-icon {
+  background-color: white !important;
+  border: 1px solid #e0e0e0;
+}
+
+.light .profile-icon svg {
+  color: black !important;
+}
+
+.light .dropdown-icon svg {
+  color: white !important;
+  background-color: rgba(0, 0, 0, 0.7) !important;
+}
+
+.light
+  .w-full.flex.items-center.justify-between.p-3.rounded-lg.bg-\[\#1a1a1a\]:hover {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+.light button.bg-\[rgb\(1\,219\,151\)\],
+.light button.bg-\[rgb\(8\,134\,90\)\],
+.light button.bg-\[rgb\(204\,2\,77\)\],
+.light a.bg-\[rgb\(1\,219\,151\)\],
+.light a.bg-\[rgb\(8\,134\,90\)\],
+.light a.bg-\[rgb\(204\,2\,77\)\] {
+  color: white !important;
+}
+
+.light .w-8.h-8.rounded-full.bg-\[\#222\] {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+}
+
+.light .w-8.h-8.rounded-full.bg-\[\#222\] svg,
+.light .w-8.h-8.rounded-full.bg-\[rgb\(204\,2\,77\)\/10\] svg,
+.light .dropdown-icon svg {
+  color: white !important;
+}
+
+.light button.bg-\[rgb\(1\,219\,151\)\] span,
+.light button.bg-\[rgb\(8\,134\,90\)\] span,
+.light button.bg-\[rgb\(204\,2\,77\)\] span,
+.light a.bg-\[rgb\(1\,219\,151\)\] span,
+.light a.bg-\[rgb\(8\,134\,90\)\] span,
+.light a.bg-\[rgb\(204\,2\,77\)\] span {
+  color: white !important;
+}
+
+.light .w-8.h-8.rounded-full.bg-black {
+  background-color: white !important;
+}
+
+.light .w-8.h-8.rounded-full.bg-black svg {
+  color: black !important;
+}
+
+.light .w-8.h-8.rounded-full svg {
+  color: white !important;
+}
+
+.light .text-\[rgb\(1\,219\,151\)\] svg {
+  color: rgb(1, 219, 151) !important;
+}
+
+.light .text-\[rgb\(204\,2\,77\)\] svg {
+  color: rgb(204, 2, 77) !important;
+}
+
+button:has(span:contains("COMPRA")),
+button:has(span:contains("VENDA")) {
+  color: white !important;
+}
+
+.light .group-hover\:bg-\[rgb\(1\,219\,151\)\/10\] svg {
+  color: rgb(1, 219, 151) !important;
+}
+
+.light button.bg-\[rgb\(8\,134\,90\)\] svg,
+.light button.bg-\[rgb\(204\,2\,77\)\] svg,
+.light a.bg-\[rgb\(8\,134\,90\)\] svg,
+.light a.bg-\[rgb\(204\,2\,77\)\] svg {
+  color: white !important;
+}
+
+.light .text-\[rgb\(1\,219\,151\)\] svg.text-\[rgb\(1\,219\,151\)\],
+.light .w-8.h-8.rounded-full.bg-\[rgba\(1\,219\,151\,0\.1\)\] svg {
+  color: black !important;
+}
+
+.light .text-\[rgb\(204\,2\,77\)\],
+.light .text-\[rgb\(204\,2\,77\)\] svg,
+.light .w-8.h-8.rounded-full.bg-\[rgb\(204\,2\,77\)\/10\] svg {
+  color: black !important;
+}
+
+.buy-button svg,
+.sell-button svg,
+button.bg-\[rgb\(8\,134\,90\)\] svg,
+button.bg-\[rgb\(204\,2\,77\)\] svg,
+button:has(span:contains("COMPRA")) svg,
+button:has(span:contains("VENDA")) svg,
+.light .buy-button svg,
+.light .sell-button svg,
+.light button.bg-\[rgb\(8\,134\,90\)\] svg,
+.light button.bg-\[rgb\(204\,2\,77\)\] svg {
+  color: white !important;
+  fill: white !important;
+}
+
+.light .profile-avatar {
+  background-color: white !important;
+  border-color: #e0e0e0 !important;
+}
+
+.light .profile-avatar svg {
+  color: black !important;
+}
+
+.wallet-button svg,
+a.bg-\[rgb\(8\,134\,90\)\] svg,
+header a.bg-\[rgb\(8\,134\,90\)\] svg,
+.light .wallet-button svg,
+.light a.bg-\[rgb\(8\,134\,90\)\] svg,
+.light header a.bg-\[rgb\(8\,134\,90\)\] svg {
+  color: white !important;
+  fill: white !important;
+}
+
+.light .w-8.h-8.rounded-full.bg-\[rgba\(255\,170\,0\,0\.1\)\] svg,
+.light .w-8.h-8.rounded-full.bg-\[rgba\(1\,219\,151\,0\.1\)\] svg {
+  color: white !important;
+  background-color: black !important;
+}
+
+.light .w-8.h-8.rounded-full.bg-\[rgba\(255\,170\,0\,0\.1\)\],
+.light .w-8.h-8.rounded-full.bg-\[rgba\(1\,219\,151\,0\.1\)\] {
+  background-color: black !important;
+}
+
+.light .bg-\[rgb\(8\,134\,90\)\].p-1\.5 svg,
+.light .bg-\[rgb\(8\,134\,90\)\].rounded-full svg,
+.light .bg-\[rgb\(8\,134\,90\)\] svg,
+.light div.bg-\[rgb\(8\,134\,90\)\] svg {
+  color: white !important;
+  fill: white !important;
+}
+
+/* Add these styles to the end of the file for the TradingView widget */
+
+/* TradingView widget iframe styles */
+iframe {
+  border: none !important;
+}
+
+/* Ensure the TradingView widget container takes full height */
+.tradingview-widget-container {
+  height: 100%;
+}
+
+/* Custom scrollbar for TradingView elements */
+.tradingview-widget-container ::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.tradingview-widget-container ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tradingview-widget-container ::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 10px;
+}
+
+.tradingview-widget-container ::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
