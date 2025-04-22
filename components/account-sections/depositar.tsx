@@ -11,10 +11,9 @@ import LoadingScreen from "@/components/loading-screen";
 
 interface PixQRCodeScreenProps {
   amount: string;
+  pixCode: string;
   onBack: () => void;
 }
-const [pixQrcode, setPixCode] = useState("");
-
 
 function formatarDataExtenso(dataISO: string): string {
   const data = new Date(dataISO);
@@ -45,9 +44,8 @@ function formatarDataExtenso(dataISO: string): string {
   return `${dia} de ${mes} de ${ano}`;
 }
 
-function PixQRCodeScreen({ amount, onBack }: PixQRCodeScreenProps) {
+function PixQRCodeScreen({ amount, onBack, pixCode }: PixQRCodeScreenProps) {
   const [copied, setCopied] = useState(false);
-  const pixCode = pixQrcode;
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(pixCode);
@@ -86,39 +84,7 @@ function PixQRCodeScreen({ amount, onBack }: PixQRCodeScreenProps) {
         <div className="bg-white p-4 rounded-lg w-64 h-64 flex items-center justify-center">
           {/* INTEGRAÇÃO DB: Substituir por QR code real gerado pelo gateway de pagamento */}
           {/* Exemplo: <img src={`${paymentGatewayUrl}/qrcode/${transactionId}`} alt="QR Code PIX" /> */}
-          <svg
-            viewBox="0 0 200 200"
-            width="200"
-            height="200"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className="w-full h-full"
-          >
-            {/* QR Code simplificado para exemplo */}
-            <rect width="200" height="200" fill="white" />
-            <g fill="black">
-              <rect x="20" y="20" width="40" height="40" />
-              <rect x="140" y="20" width="40" height="40" />
-              <rect x="20" y="140" width="40" height="40" />
-              <rect x="70" y="20" width="10" height="10" />
-              <rect x="90" y="20" width="10" height="10" />
-              <rect x="120" y="20" width="10" height="10" />
-              <rect x="20" y="70" width="10" height="10" />
-              <rect x="20" y="90" width="10" height="10" />
-              <rect x="20" y="120" width="10" height="10" />
-              <rect x="70" y="70" width="60" height="60" />
-              <rect x="140" y="70" width="10" height="10" />
-              <rect x="140" y="90" width="10" height="10" />
-              <rect x="140" y="120" width="10" height="10" />
-              <rect x="70" y="140" width="10" height="10" />
-              <rect x="90" y="140" width="10" height="10" />
-              <rect x="120" y="140" width="10" height="10" />
-              <rect x="170" y="140" width="10" height="10" />
-              <rect x="170" y="70" width="10" height="10" />
-              <rect x="170" y="90" width="10" height="10" />
-              <rect x="170" y="120" width="10" height="10" />
-            </g>
-          </svg>
+         <img src={`https://quickchart.io/qr?text=${pixCode}`} width="350" alt="QrCode Pix"/>
         </div>
       </div>
 
@@ -174,6 +140,7 @@ function PixQRCodeScreen({ amount, onBack }: PixQRCodeScreenProps) {
 }
 
 export default function DepositarSection() {
+  const [pixQrcode, setPixCode] = useState("");
   const [activeTab, setActiveTab] = useState("depositar");
   const [deposits, setDeposits] = useState<any[]>([]);
   const [depositValue, setDepositValue] = useState("");
@@ -392,10 +359,9 @@ export default function DepositarSection() {
     };
 
     try {
-      // Mostrar tela de loading
       setIsLoading(true);
-  
-      // Realizando a requisição para o endpoint de depósito
+      setShowQRCode(false);
+      
       const response = await fetch('/api/account/deposit/', {
         method: 'POST',
         headers: {
@@ -408,15 +374,11 @@ export default function DepositarSection() {
   
       if (response.ok) {
         setPixCode(responseData.qrcode);
-        toast.open({
-          variant: "success",
-          title: "Depósito realizado com sucesso",
-          description: "Seu depósito foi registrado com sucesso.",
-          duration: 5000,
-        });
-        
+        // Agora setShowQRCode é chamado diretamente aqui, não pelo LoadingScreen
+        setIsLoading(false);
+        setShowQRCode(true);
       } else {
-        // Caso haja erro no servidor
+        setIsLoading(false);
         toast.open({
           variant: "error",
           title: "Erro ao processar o depósito",
@@ -425,7 +387,7 @@ export default function DepositarSection() {
         });
       }
     } catch (error) {
-      // Captura de erros inesperados
+      setIsLoading(false);
       console.error("Erro ao realizar depósito:", error);
       toast.open({
         variant: "error",
@@ -433,17 +395,8 @@ export default function DepositarSection() {
         description: "Não foi possível processar sua solicitação. Tente novamente mais tarde.",
         duration: 5000,
       });
-    } finally {
-      setIsLoading(false);
     }
   };
-
-  // Função para lidar com a conclusão do loading
-  const handleLoadingComplete = () => {
-    setIsLoading(false);
-    setShowQRCode(true);
-  };
-
   // Função para voltar ao formulário
   const handleBackToForm = () => {
     setShowQRCode(false);
@@ -452,7 +405,8 @@ export default function DepositarSection() {
   // Renderizar o conteúdo apropriado com base no estado atual
   const renderDepositContent = () => {
     if (isLoading) {
-      return <LoadingScreen onComplete={handleLoadingComplete} />;
+      return <LoadingScreen     isLoading={isLoading}
+      onComplete={() => setShowQRCode(true)}  />;
     }
 
     if (showQRCode) {
@@ -460,6 +414,8 @@ export default function DepositarSection() {
         <PixQRCodeScreen
           amount={formatCurrency(depositValue)}
           onBack={handleBackToForm}
+          pixCode={pixQrcode}
+
         />
       );
     }
@@ -726,9 +682,9 @@ export default function DepositarSection() {
                       <td className="py-4 px-4 text-sm">
                         <span
                           className={`px-2 py-1 rounded-full text-xs capitalize ${
-                            dep.status === "Concluído"
+                            dep.status === "concluido"
                               ? "bg-[rgba(1,219,151,0.1)] text-[rgb(1,219,151)]"
-                              : dep.status === "Pendente"
+                              : dep.status === "pendente"
                                 ? "bg-[rgba(255,170,0,0.1)] text-[rgb(255,170,0)]"
                                 : "bg-[rgba(204,2,77,0.1)] text-[rgb(204,2,77)]"
                           }`}

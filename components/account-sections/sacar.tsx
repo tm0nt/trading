@@ -1,10 +1,66 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ChevronDown } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useAccountStore } from "@/store/account-store";
 import { useToast } from "@/components/ui/toast";
+
+// Função para validar CPF
+const isValidCPF = (cpf: string): boolean => {
+  cpf = cpf.replace(/[^\d]+/g, ""); // Remove caracteres não numéricos
+  if (cpf.length !== 11) return false;
+
+  const sum = (digits: number[]) => digits.reduce((acc, digit, index) => acc + digit * (digits.length + 1 - index), 0);
+  const calcDigit = (sum: number) => (sum * 10) % 11 % 10;
+  const digits = cpf.split("").map(Number);
+
+  const firstCheck = calcDigit(sum(digits.slice(0, 9))) === digits[9];
+  const secondCheck = calcDigit(sum(digits.slice(0, 10))) === digits[10];
+
+  return firstCheck && secondCheck;
+};
+
+// Função para formatar o valor monetário
+const formatCurrency = (value: any) => {
+  if (value === null || value === undefined) return "R$ 0,00";
+  const numericValue =
+    typeof value === "string"
+      ? Number(value.replace(/\D/g, ""))
+      : Number(value);
+  return numericValue.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  });
+};
+
+// Função para formatar data de maneira legível
+function formatarDataExtenso(dataISO: string): string {
+  const data = new Date(dataISO);
+
+  if (isNaN(data.getTime())) {
+    return "Data inválida";
+  }
+
+  const dia = data.getDate();
+  const meses = [
+    "janeiro",
+    "fevereiro",
+    "março",
+    "abril",
+    "maio",
+    "junho",
+    "julho",
+    "agosto",
+    "setembro",
+    "outubro",
+    "novembro",
+    "dezembro",
+  ];
+  const mes = meses[data.getMonth()];
+  const ano = data.getFullYear();
+
+  return `${dia} de ${mes} de ${ano}`;
+}
 
 export default function SacarSection() {
   const toast = useToast();
@@ -13,80 +69,15 @@ export default function SacarSection() {
   const [MIN_WITHDRAW_VALUE, setMIN_WITHDRAW_VALUE] = useState(100);
   const [withdrawValue, setWithdrawValue] = useState("");
   const [loadingWithdraw, setLoadingWithdraw] = useState(false);
-  const [withdrawSuccess, setWithdrawSuccess] = useState<{ id: string } | null>(
-    null,
-  );
+  const [withdrawSuccess, setWithdrawSuccess] = useState<{ id: string } | null>(null);
   const [activeTab, setActiveTab] = useState("sacar");
   const [withdraw, setWithdraw] = useState<any[]>([]);
-  const { realBalance } = useAccountStore();
+  const { realBalance, syncBalances } = useAccountStore();
   const isMobile = useMediaQuery("(max-width: 768px)");
   const [statusFilter, setStatusFilter] = useState("Todos os status");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-
-  function formatarDataExtenso(dataISO: string): string {
-    const data = new Date(dataISO);
-
-    // Verifica se a data é válida
-    if (isNaN(data.getTime())) {
-      return "Data inválida";
-    }
-
-    const dia = data.getDate();
-    const meses = [
-      "janeiro",
-      "fevereiro",
-      "março",
-      "abril",
-      "maio",
-      "junho",
-      "julho",
-      "agosto",
-      "setembro",
-      "outubro",
-      "novembro",
-      "dezembro",
-    ];
-    const mes = meses[data.getMonth()];
-    const ano = data.getFullYear();
-
-    return `${dia} de ${mes} de ${ano}`;
-  }
-
-  // Filter withdrawals based on filters
-  const filteredWithdraw = withdraw.filter((saque) => {
-    // Status filter
-    if (
-      statusFilter !== "Todos os status" &&
-      saque.status !== statusFilter.toLowerCase()
-    ) {
-      return false;
-    }
-
-    // Start date filter
-    if (startDate) {
-      const saqueDate = new Date(saque.dataPedido);
-      const filterStartDate = new Date(startDate);
-      filterStartDate.setHours(0, 0, 0, 0);
-
-      if (saqueDate < filterStartDate) {
-        return false;
-      }
-    }
-
-    // End date filter
-    if (endDate) {
-      const saqueDate = new Date(saque.dataPedido);
-      const filterEndDate = new Date(endDate);
-      filterEndDate.setHours(23, 59, 59, 999);
-
-      if (saqueDate > filterEndDate) {
-        return false;
-      }
-    }
-
-    return true;
-  });
+  const [errorMessage, setErrorMessage] = useState("");
 
   // Fetch minimum withdraw value
   useEffect(() => {
@@ -122,23 +113,24 @@ export default function SacarSection() {
     fetchWithdrawHistory();
   }, []);
 
-  // Format currency
-  const formatCurrency = (value: any) => {
-    if (value === null || value === undefined) return "R$ 0,00";
-    const numericValue =
-      typeof value === "string"
-        ? Number(value.replace(/\D/g, "")) / 100
-        : Number(value);
-    return numericValue.toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    });
+  // Máscara de CPF (com JS puro)
+  const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let cpf = e.target.value.replace(/\D/g, ""); // Remove tudo que não for número
+    if (cpf.length > 3 && cpf.length <= 6) {
+      cpf = cpf.slice(0, 3) + "." + cpf.slice(3);
+    } else if (cpf.length > 6 && cpf.length <= 9) {
+      cpf = cpf.slice(0, 3) + "." + cpf.slice(3, 6) + "." + cpf.slice(6);
+    } else if (cpf.length > 9) {
+      cpf = cpf.slice(0, 3) + "." + cpf.slice(3, 6) + "." + cpf.slice(6, 9) + "-" + cpf.slice(9, 11);
+    }
+    setPixKey(cpf);
   };
 
   // Handle withdraw submission
   const handleWithdraw = async () => {
-    const numericValue = Number(withdrawValue.replace(/\D/g, "")) / 100;
+    const numericValue = Number(withdrawValue.replace(/\D/g, ""));
 
+    // Check if the withdraw value meets requirements
     if (numericValue < MIN_WITHDRAW_VALUE) {
       toast.open({
         variant: "error",
@@ -159,21 +151,11 @@ export default function SacarSection() {
       return;
     }
 
-    if (!pixKeyType) {
+    if (!pixKeyType || !pixKey) {
       toast.open({
         variant: "error",
-        title: "Tipo de chave não selecionado",
-        description: "Selecione o tipo da chave PIX",
-        duration: 5000,
-      });
-      return;
-    }
-
-    if (!pixKey) {
-      toast.open({
-        variant: "error",
-        title: "Chave PIX não informada",
-        description: "Digite sua chave PIX",
+        title: "Dados inválidos",
+        description: "Por favor, informe todos os dados necessários para o saque.",
         duration: 5000,
       });
       return;
@@ -202,6 +184,7 @@ export default function SacarSection() {
       setWithdrawValue("");
       setPixKey("");
       setPixKeyType("");
+      syncBalances();
 
       // Refresh withdrawal history
       const historyResponse = await fetch("/api/account/withdraw/history");
@@ -210,15 +193,14 @@ export default function SacarSection() {
       toast.open({
         variant: "success",
         title: "Saque solicitado com sucesso!",
-        description: `ID da transação: ${result.id}`,
+        description: `ID da transação: ${result.withdrawal.id}`,
         duration: 5000,
       });
     } catch (error) {
       toast.open({
         variant: "error",
         title: "Erro ao processar saque",
-        description:
-          error instanceof Error ? error.message : "Tente novamente mais tarde",
+        description: error instanceof Error ? error.message : "Tente novamente mais tarde",
         duration: 5000,
       });
     } finally {
@@ -247,15 +229,13 @@ export default function SacarSection() {
         <div className="text-[#999]">ID</div>
         <div className="text-right">{saque.id.slice(0, 8)}...</div>
         <div className="text-[#999]">Data Pedido</div>
-        <div className="text-right">
-          {formatarDataExtenso(saque.dataPedido)}
-        </div>
+        <div className="text-right">{formatarDataExtenso(saque.dataPedido)}</div>
         <div className="text-[#999]">Data Pagamento</div>
         <div className="text-right">
           {saque.dataPagamento ? formatarDataExtenso(saque.dataPagamento) : "-"}
         </div>
         <div className="text-[#999]">Tipo PIX</div>
-        <div className="text-right capitalize">{saque.tipoChave}</div>
+        <div className="text-right uppercase">{saque.tipoChave}</div>
         <div className="text-[#999]">Chave PIX</div>
         <div className="text-right">{saque.chave}</div>
         <div className="text-[#999]">Taxa</div>
@@ -268,13 +248,9 @@ export default function SacarSection() {
   const renderDesktopWithdrawal = (saque: any) => (
     <tr key={saque.id} className="border-b border-[#2a2a2a] hover:bg-[#121212]">
       <td className="py-4 px-4 text-sm">{saque.id.slice(0, 8)}...</td>
-      <td className="py-4 px-4 text-sm">
-        {formatarDataExtenso(saque.dataPedido)}
-      </td>
-      <td className="py-4 px-4 text-sm">
-        {saque.dataPagamento ? formatarDataExtenso(saque.dataPagamento) : "-"}
-      </td>
-      <td className="py-4 px-4 text-sm capitalize">{saque.tipoChave}</td>
+      <td className="py-4 px-4 text-sm">{formatarDataExtenso(saque.dataPedido)}</td>
+      <td className="py-4 px-4 text-sm">{saque.dataPagamento ? formatarDataExtenso(saque.dataPagamento) : "-"}</td>
+      <td className="py-4 px-4 text-sm uppercase">{saque.tipoChave}</td>
       <td className="py-4 px-4 text-sm">{saque.chave}</td>
       <td className="py-4 px-4 text-sm">
         <span
@@ -316,69 +292,9 @@ export default function SacarSection() {
         <>
           <h3 className="text-lg font-semibold mb-6">Sacar</h3>
 
-          {/* Available Balance */}
-          <div className="bg-[#121212] border border-[#2a2a2a] rounded-lg p-4 mb-6">
-            <div className="flex justify-between mb-4">
-              <h4 className="font-medium">Saldo disponível</h4>
-              <div className="font-bold">{formatCurrency(realBalance)}</div>
-            </div>
-            <p className="text-sm text-[#999] mb-4">
-              Você precisa ter saldo disponível para realizar um saque.
-            </p>
-          </div>
-
           {/* Withdraw Method */}
           <div className="bg-[#121212] border border-[#2a2a2a] rounded-lg p-4 mb-6">
             <h4 className="font-medium mb-4">Método de saque</h4>
-            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4 cursor-pointer hover:border-[rgb(1,219,151)]">
-              <div className="flex items-center mb-2">
-                <div className="w-10 h-10 rounded-full bg-[rgba(1,219,151,0.1)] flex items-center justify-center mr-3">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M19 5H5C3.89543 5 3 5.89543 3 7V17C3 18.1046 3.89543 19 5 19H19C20.1046 19 21 18.1046 21 17V7C21 5.89543 20.1046 5 19 5Z"
-                      stroke="rgb(1,219,151)"
-                      strokeWidth="2"
-                    />
-                    <path
-                      d="M3 10H21"
-                      stroke="rgb(1,219,151)"
-                      strokeWidth="2"
-                    />
-                    <path
-                      d="M7 15H7.01"
-                      stroke="rgb(1,219,151)"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                    <path
-                      d="M11 15H13"
-                      stroke="rgb(1,219,151)"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </div>
-                <div className="font-medium">Pix</div>
-              </div>
-              <p className="text-sm text-[#999]">Saque instantâneo via Pix</p>
-            </div>
-          </div>
-
-          {/* Withdraw Form */}
-          <div className="bg-[#121212] border border-[#2a2a2a] rounded-lg p-4 mb-6">
-            <h4 className="font-medium mb-4">Valor do saque</h4>
-            <input
-              type="text"
-              value={withdrawValue}
-              onChange={(e) => setWithdrawValue(e.target.value)}
-              className="w-full bg-[#1a1a1a] border border-[#2a2a2a] rounded-md p-3 mb-4"
-              placeholder="Digite o valor"
-            />
-            <p className="text-xs text-[#999] mb-6">
-              Mínimo: {formatCurrency(MIN_WITHDRAW_VALUE)}
-            </p>
-
-            <h4 className="font-medium mb-4">Tipo da chave Pix</h4>
             <select
               value={pixKeyType}
               onChange={(e) => setPixKeyType(e.target.value)}
@@ -391,14 +307,45 @@ export default function SacarSection() {
               <option value="aleatoria">Chave aleatória</option>
             </select>
 
-            <h4 className="font-medium mb-4">Chave Pix</h4>
+            {pixKeyType === "cpf" && (
+              <>
+                <h4 className="font-medium mb-4">CPF</h4>
+                <input
+                  type="text"
+                  value={pixKey}
+                  onChange={handleCPFChange}
+                  className="w-full bg-[#1a1a1a] border border-[#2a2a2a] rounded-md p-3"
+                  placeholder="Digite seu CPF"
+                />
+                {!isValidCPF(pixKey) && pixKey && (
+                  <div className="text-red-500 text-sm mt-2">CPF inválido</div>
+                )}
+              </>
+            )}
+
+            {pixKeyType !== "cpf" && (
+              <>
+                <h4 className="font-medium mb-4">Chave Pix</h4>
+                <input
+                  type="text"
+                  value={pixKey}
+                  onChange={(e) => setPixKey(e.target.value)}
+                  className="w-full bg-[#1a1a1a] border border-[#2a2a2a] rounded-md p-3"
+                  placeholder="Digite sua chave Pix"
+                />
+              </>
+            )}
+            <h4 className="font-medium mb-4 mt-4">Valor do saque</h4>
             <input
               type="text"
-              value={pixKey}
-              onChange={(e) => setPixKey(e.target.value)}
-              className="w-full bg-[#1a1a1a] border border-[#2a2a2a] rounded-md p-3"
-              placeholder="Digite sua chave Pix"
+              value={withdrawValue}
+              onChange={(e) => setWithdrawValue(e.target.value)}
+              className="w-full bg-[#1a1a1a] border border-[#2a2a2a] rounded-md p-3 mb-4"
+              placeholder="Digite o valor"
             />
+            <p className="text-xs text-[#999] mb-6">
+              Mínimo: {formatCurrency(MIN_WITHDRAW_VALUE)}
+            </p>
           </div>
 
           {/* Submit Button */}
@@ -466,7 +413,7 @@ export default function SacarSection() {
                     <th className="py-3 px-4">Taxa</th>
                   </tr>
                 </thead>
-                <tbody>{filteredWithdraw.map(renderDesktopWithdrawal)}</tbody>
+                <tbody>{withdraw.map(renderDesktopWithdrawal)}</tbody>
               </table>
             </div>
           )}
@@ -474,7 +421,7 @@ export default function SacarSection() {
           {/* Mobile List */}
           {isMobile && (
             <div className="space-y-4">
-              {filteredWithdraw.map(renderMobileWithdrawal)}
+              {withdraw.map(renderMobileWithdrawal)}
             </div>
           )}
         </>

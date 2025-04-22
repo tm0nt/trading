@@ -22,6 +22,7 @@ export async function POST(request: Request) {
     const payload = await request.json();
 
     const requiredFields = [
+      "tipo",
       "balance",
       "data",
       "ativo",
@@ -91,6 +92,7 @@ export async function POST(request: Request) {
     const operation = await prisma.tradeOperation.create({
       data: {
         userId,
+        tipo: payload.tipo,
         data: new Date(payload.data),
         ativo: payload.ativo,
         tempo: payload.tempo,

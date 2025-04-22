@@ -4,38 +4,38 @@ import { useEffect, useState } from "react";
 
 interface LoadingScreenProps {
   message?: string;
+  isLoading: boolean; // Adicione esta prop
   onComplete?: () => void;
-  duration?: number;
 }
 
 export default function LoadingScreen({
   message = "Gerando pagamento...",
+  isLoading, // Recebe o estado de loading
   onComplete,
-  duration = 2000,
 }: LoadingScreenProps) {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
+    if (!isLoading && progress >= 100) {
+      // Só chama onComplete quando o loading externo terminar E a animação estiver completa
+      onComplete?.();
+    }
+  }, [isLoading, progress, onComplete]);
+
+  useEffect(() => {
     const interval = setInterval(() => {
       setProgress((prev) => {
-        const newProgress = prev + 100 / (duration / 100);
-
-        if (newProgress >= 100) {
-          clearInterval(interval);
-          if (onComplete) {
-            setTimeout(() => {
-              onComplete();
-            }, 200);
-          }
-          return 100;
-        }
+        // Aumenta progresso apenas se ainda estiver carregando
+        const newProgress = isLoading 
+          ? Math.min(prev + 2, 99) // Não chega a 100% enquanto isLoading for true
+          : Math.min(prev + 5, 100); // Completa rapidamente quando loading termina
 
         return newProgress;
       });
     }, 100);
 
     return () => clearInterval(interval);
-  }, [duration, onComplete]);
+  }, [isLoading]);
 
   return (
     <div className="bg-[#121212] border border-[#2a2a2a] rounded-lg p-6 animate-in fade-in duration-300">

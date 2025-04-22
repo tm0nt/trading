@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/auth", "/api/config/general", "/api/auth/"];
+const PUBLIC_PATHS = ["/auth", "/api/config/general", "/api/auth/", "/api/account/deposit/webhook"];
 
 const STATIC_FILES = [
   "/favicon.ico",

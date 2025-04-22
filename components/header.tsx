@@ -174,7 +174,7 @@ export default function Header({
       <div className="flex items-center">
         {/* Logo */}
         <div className="mr-4">
-          <EbinexLogoImg width={32} height={32} />
+          <EbinexLogoImg width={150} height={32} />
         </div>
 
         {/* Back arrow (mobile only when in account page) */}

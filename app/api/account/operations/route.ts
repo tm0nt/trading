@@ -54,11 +54,13 @@ export async function GET() {
         tempo: op.tempo,
         previsao: op.previsao,
         vela: op.vela,
+        tipo: op.tipo,
         abertura: op.abertura,
         fechamento: op.fechamento,
         valor: op.valor,
         status: op.status,
         resultado: op.resultado,
+        receita: op.receita,
         data: op.data.toISOString(), // Formato ISO para facilitar o uso no frontend
       })),
     });
